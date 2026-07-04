@@ -44,9 +44,10 @@ export default function MathQuizApp() {
   const isCurrentCorrect = currentRecord?.isCorrect ?? false;
 
   const triggerConfetti = () => {
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
     confetti({
-      particleCount: 150,
-      spread: 90,
+      particleCount: isMobile ? 50 : 150,
+      spread: isMobile ? 60 : 90,
       origin: { y: 0.6 },
       colors: ['#ffc107', '#ff4081', '#00bcd4', '#4caf50', '#7c4dff']
     });
@@ -96,7 +97,8 @@ export default function MathQuizApp() {
         if (newStreak > maxStreak) setMaxStreak(newStreak);
         return newStreak;
       });
-      confetti({ particleCount: 30, spread: 50, origin: { y: 0.8 } });
+      const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+      confetti({ particleCount: isMobile ? 15 : 30, spread: 50, origin: { y: 0.8 } });
       toast.success("Chính xác! Giỏi quá!", {
         icon: <CheckCircle2 className="w-6 h-6 text-green-500" />,
         duration: 2000,
@@ -127,7 +129,8 @@ export default function MathQuizApp() {
         if (newStreak > maxStreak) setMaxStreak(newStreak);
         return newStreak;
       });
-      confetti({ particleCount: 30, spread: 50, origin: { y: 0.8 } });
+      const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+      confetti({ particleCount: isMobile ? 15 : 30, spread: 50, origin: { y: 0.8 } });
       toast.success("Tuyệt vời! Bạn ghép đúng hết rồi!", {
         icon: <CheckCircle2 className="w-6 h-6 text-green-500" />
       });
@@ -286,7 +289,7 @@ export default function MathQuizApp() {
 
   if (!hasStarted) {
     return (
-      <div className="h-screen h-[100dvh] bg-gradient-to-br from-cyan-100 via-blue-100 to-indigo-100 flex items-center justify-center p-4 font-sans relative overflow-hidden">
+      <div className="h-screen h-[100dvh] bg-gradient-to-br from-cyan-100 via-blue-100 to-indigo-100 flex items-center justify-center md:p-4 font-sans relative overflow-hidden">
         <motion.div animate={{ y: [0, -20, 0], rotate: [0, 45, 0] }} transition={{ repeat: Infinity, duration: 4 }} className="absolute top-10 left-10 text-cyan-300 opacity-50">
           <Sparkles size={80} />
         </motion.div>
@@ -294,7 +297,7 @@ export default function MathQuizApp() {
           <Star size={100} />
         </motion.div>
 
-        <motion.div initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: "spring", bounce: 0.5 }} className="w-full h-full max-w-6xl max-h-[90vh] flex flex-col md:flex-row bg-white/90 backdrop-blur-md shadow-2xl rounded-[2.5rem] border-4 border-white overflow-hidden relative z-10 m-4">
+        <motion.div initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: "spring", bounce: 0.5 }} className="w-full h-full max-w-6xl max-h-none md:max-h-[90vh] flex flex-col md:flex-row bg-white/90 backdrop-blur-md shadow-2xl rounded-none md:rounded-[2.5rem] border-0 md:border-4 border-white overflow-hidden relative z-10 m-0 md:m-4">
             
             {/* Left Hero Section */}
             <div className="flex-1 bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-600 p-8 flex flex-col items-center justify-center text-white relative overflow-hidden hidden md:flex">
@@ -316,7 +319,7 @@ export default function MathQuizApp() {
             </div>
 
             {/* Right Configuration Section */}
-            <div className="flex-1 flex flex-col p-6 sm:p-10 lg:p-12 overflow-y-auto bg-slate-50">
+            <div className="flex-1 flex flex-col p-4 pt-10 sm:p-10 lg:p-12 overflow-y-auto bg-slate-50">
               <div className="md:hidden flex flex-col items-center mb-8">
                 <div className="w-32 h-32 mb-4 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 p-1 shadow-lg">
                   <img src="/math_mascot.png" alt="Math Mascot" className="w-full h-full object-contain rounded-full bg-white" />
@@ -428,12 +431,12 @@ export default function MathQuizApp() {
 
   return (
     <div className="h-screen h-[100dvh] bg-slate-50 flex flex-col font-sans overflow-hidden relative">
-      {/* Animated Background Blobs */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+      {/* Animated Background Blobs - Hidden on mobile to save GPU */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none z-0 hidden md:block">
         <motion.div animate={{ x: [0, 30, 0], y: [0, 40, 0] }} transition={{ duration: 15, repeat: Infinity, ease: "linear" }} className="absolute -top-20 -left-20 w-[30rem] h-[30rem] bg-blue-200/40 rounded-full blur-3xl"></motion.div>
         <motion.div animate={{ x: [0, -30, 0], y: [0, -40, 0] }} transition={{ duration: 18, repeat: Infinity, ease: "linear" }} className="absolute -bottom-20 -right-20 w-[40rem] h-[40rem] bg-indigo-200/40 rounded-full blur-3xl"></motion.div>
-        <div className="absolute inset-0 bg-[radial-gradient(#94a3b8_1px,transparent_1px)] [background-size:24px_24px] opacity-20"></div>
       </div>
+      <div className="absolute inset-0 bg-[radial-gradient(#94a3b8_1px,transparent_1px)] [background-size:24px_24px] opacity-20 z-0"></div>
 
       {/* Header with Duolingo-style Progress */}
       <header className="relative z-10 w-full px-4 py-4 shrink-0 max-w-4xl mx-auto flex items-center gap-4">
@@ -477,11 +480,11 @@ export default function MathQuizApp() {
             initial={{ opacity: 0, scale: 0.95, y: 15 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 1.05, y: -15 }}
-            transition={{ type: "spring", stiffness: 300, damping: 25 }}
-            className="w-full h-full flex flex-col md:flex-row shadow-2xl border-4 border-white rounded-[2rem] overflow-hidden bg-white max-h-[90vh]"
+            transition={{ type: "spring", stiffness: 200, damping: 20 }}
+            className="w-full h-full md:max-h-[90vh] flex flex-col md:flex-row shadow-2xl border-4 border-white rounded-[2rem] overflow-hidden bg-white shrink-0 my-auto"
           >
             {/* Left Column: Question & Options */}
-            <div className="flex-1 flex flex-col overflow-hidden bg-slate-50 border-b md:border-b-0 md:border-r-2 border-slate-100">
+            <div className="flex-1 flex flex-col overflow-y-auto bg-slate-50 border-b md:border-b-0 md:border-r-2 border-slate-100 relative">
               <div className="bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 p-3 sm:p-4 text-white shrink-0 relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-8 -mt-8 blur-lg"></div>
                 <h2 className="text-base sm:text-lg font-bold leading-snug relative z-10 drop-shadow-md text-center">
@@ -489,10 +492,10 @@ export default function MathQuizApp() {
                 </h2>
               </div>
               
-              <div className="p-2 sm:p-4 flex-1 flex flex-col justify-evenly">
+              <div className="p-2 sm:p-4 md:p-8 flex-1 flex flex-col justify-evenly gap-6">
                 {/* Visual Elements */}
                 {(question.fractions || question.geometry || question.arithmetic || question.type !== 'drag-drop') && (
-                  <div className="mb-2 sm:mb-4 min-h-[70px] flex items-center justify-center bg-white rounded-2xl p-2 sm:p-3 border-2 border-slate-100 shadow-sm shrink-0">
+                  <div className="mb-2 sm:mb-4 min-h-[100px] md:min-h-[160px] flex items-center justify-center bg-white rounded-2xl p-4 sm:p-6 md:p-10 border-2 border-slate-100 shadow-sm shrink-0">
                     {question.fractions && <FractionExpression fractions={question.fractions} />}
                     {question.geometry && <GeometryRenderer geom={question.geometry} />}
                     {question.arithmetic && (
@@ -508,7 +511,7 @@ export default function MathQuizApp() {
 
                 {/* Question Interactions */}
                 {question.type === 'multiple-choice' && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 md:gap-6 md:px-4 pb-2">
                     {question.options?.map((option: any, index: number) => {
                       const isSelected = selectedAnswer === option.id;
                       const isCorrect = option.id === question.correctAnswerId;
@@ -539,7 +542,7 @@ export default function MathQuizApp() {
                           transition={{ duration: 0.2, delay: index * 0.08 }}
                           onClick={() => handleAnswerClick(option.id)}
                           disabled={isAnswerChecked}
-                          className={`relative p-3 sm:p-4 rounded-2xl text-base font-bold transition-all text-left flex items-center gap-3 border-2 ${btnStateClass}`}
+                          className={`relative p-3 sm:p-4 md:p-6 rounded-2xl text-base font-bold transition-all text-left flex items-center gap-3 md:gap-4 border-2 ${btnStateClass}`}
                         >
                           <span className={`flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center font-black text-sm shadow-inner
                             ${isAnswerChecked && isCorrect ? 'bg-green-500 text-white' : 
@@ -549,7 +552,7 @@ export default function MathQuizApp() {
                             {option.id}
                           </span>
                           
-                          <div className="flex-1 flex justify-center text-xl font-bold">
+                          <div className="flex-1 flex justify-center text-2xl md:text-4xl font-bold">
                             {option.type === 'fraction' ? (
                               <Fraction numerator={option.value.numerator} denominator={option.value.denominator} />
                             ) : (
@@ -580,16 +583,16 @@ export default function MathQuizApp() {
             </div>
 
             {/* Right Column: Progress, Feedback & Actions */}
-            <div className="w-full md:w-[40%] flex flex-col bg-white shrink-0 border-t-2 md:border-t-0 md:border-l-2 border-slate-100">
+            <div className="w-full md:w-[40%] flex flex-col bg-white shrink-0 border-t-2 md:border-t-0 md:border-l-2 border-slate-100 z-40 md:shadow-none shadow-[0_-15px_25px_-15px_rgba(0,0,0,0.15)]">
               
               {/* Progress Section Removed from here */}
 
               {/* Feedback Section */}
-              <div className="flex-1 p-5 flex flex-col justify-center items-center min-h-[140px] bg-white relative">
+              <div className={`flex flex-col justify-center items-center bg-white relative transition-all ${isAnswerChecked ? 'flex-1 p-5 min-h-[140px]' : 'h-0 overflow-hidden'}`}>
                 {isAnswerChecked ? (
                   <motion.div 
-                    initial={{ opacity: 0, scale: 0.9, y: 10 }} 
-                    animate={{ opacity: 1, scale: 1, y: 0 }} 
+                    initial={{ opacity: 0, y: 150 }} 
+                    animate={{ opacity: 1, y: 0 }} 
                     transition={{ type: "spring", stiffness: 300, damping: 20 }}
                     className="flex flex-col items-center relative z-10 w-full"
                   >
@@ -611,19 +614,11 @@ export default function MathQuizApp() {
                       className="w-40 h-40 sm:w-56 sm:h-56 object-contain relative z-20 mix-blend-multiply"
                     />
                   </motion.div>
-                ) : (
-                  <div className="flex flex-col items-center justify-center text-slate-500 space-y-4 relative z-10 w-full">
-                    <div className="p-3 bg-white border-2 border-slate-200 rounded-2xl shadow-sm relative">
-                       <div className="absolute -bottom-2.5 left-1/2 -translate-x-1/2 w-5 h-5 bg-white border-b-2 border-r-2 border-slate-200 rotate-45 rounded-sm"></div>
-                       <span className="text-sm font-bold text-center px-2 tracking-wide">Chọn đáp án để xem Cú giải thích nhé!</span>
-                    </div>
-                    <img src="/math_mascot.png" alt="Mascot waiting" className="w-32 h-32 sm:w-48 sm:h-48 object-contain mix-blend-multiply grayscale opacity-60" />
-                  </div>
-                )}
+                ) : null}
               </div>
 
               {/* Action Buttons */}
-              <div className="p-4 bg-slate-50 border-t-2 border-slate-100 mt-auto">
+              <div className="p-4 bg-white md:bg-slate-50 border-t-2 border-slate-100 mt-auto">
                 {question.type === 'multiple-choice' && !isAnswerChecked ? (
                   <Button 
                     onClick={checkAnswer} 
