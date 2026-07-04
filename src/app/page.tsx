@@ -401,22 +401,29 @@ export default function MathQuizApp() {
 
   return (
     <div className="h-screen h-[100dvh] bg-slate-50 flex flex-col font-sans overflow-hidden relative">
-      <div className="absolute inset-0 bg-[radial-gradient(#94a3b8_1px,transparent_1px)] [background-size:24px_24px] opacity-20 z-0"></div>
-      <div className="absolute top-0 left-0 w-full h-1/3 bg-gradient-to-b from-blue-100/50 to-transparent z-0"></div>
+      {/* Animated Background Blobs */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+        <motion.div animate={{ x: [0, 30, 0], y: [0, 40, 0] }} transition={{ duration: 15, repeat: Infinity, ease: "linear" }} className="absolute -top-20 -left-20 w-[30rem] h-[30rem] bg-blue-200/40 rounded-full blur-3xl"></motion.div>
+        <motion.div animate={{ x: [0, -30, 0], y: [0, -40, 0] }} transition={{ duration: 18, repeat: Infinity, ease: "linear" }} className="absolute -bottom-20 -right-20 w-[40rem] h-[40rem] bg-indigo-200/40 rounded-full blur-3xl"></motion.div>
+        <div className="absolute inset-0 bg-[radial-gradient(#94a3b8_1px,transparent_1px)] [background-size:24px_24px] opacity-20"></div>
+      </div>
 
-      {/* Header */}
-      <header className="relative z-10 w-full bg-white/80 backdrop-blur-md shadow-sm border-b border-slate-200 px-4 py-3 shrink-0">
-        <div className="max-w-4xl mx-auto flex justify-between items-center">
-          <h1 className="text-xl sm:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 flex items-center gap-2">
-            <span className="bg-gradient-to-br from-blue-100 to-blue-200 text-blue-600 w-10 h-10 flex items-center justify-center rounded-xl shadow-inner border border-blue-200">
-              <Trophy className="w-5 h-5" />
-            </span>
-            Vui Học Toán
-          </h1>
-          <div className="text-slate-500 font-bold text-sm bg-white px-4 py-1.5 rounded-full border-2 border-slate-100 shadow-sm flex items-center gap-2">
-            <span>Câu hỏi</span>
-            <span className="bg-blue-100 text-blue-600 px-2 py-0.5 rounded-md">{currentIndex + 1} / {totalQuestions}</span>
-          </div>
+      {/* Header with Duolingo-style Progress */}
+      <header className="relative z-10 w-full px-4 py-4 shrink-0 max-w-4xl mx-auto flex items-center gap-4">
+        <button onClick={restartQuiz} className="text-slate-400 hover:text-slate-600 transition-colors shrink-0">
+          <XCircle className="w-8 h-8" strokeWidth={2.5} />
+        </button>
+        <div className="flex-1 h-5 bg-slate-200 rounded-full overflow-hidden relative shadow-inner border-[3px] border-slate-100">
+          <motion.div 
+            initial={{ width: 0 }} animate={{ width: `${progress}%` }} transition={{ type: "spring", stiffness: 50 }}
+            className="h-full bg-gradient-to-r from-green-400 to-emerald-500 relative"
+          >
+            <div className="absolute top-1 left-2 right-2 h-1.5 bg-white/30 rounded-full"></div>
+          </motion.div>
+        </div>
+        <div className="flex items-center gap-2 text-amber-500 font-black text-xl shrink-0">
+          <svg className="w-8 h-8 drop-shadow-sm fill-amber-400 stroke-amber-600 stroke-[1.5]" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+          {score}
         </div>
       </header>
 
@@ -460,30 +467,37 @@ export default function MathQuizApp() {
                 {/* Question Interactions */}
                 {question.type === 'multiple-choice' && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4">
-                    {question.options?.map((option: any) => {
+                    {question.options?.map((option: any, index: number) => {
                       const isSelected = selectedAnswer === option.id;
                       const isCorrect = option.id === question.correctAnswerId;
                       
-                      let btnStateClass = "bg-white border-slate-200 border-b-[5px] hover:border-blue-400 hover:bg-blue-50 hover:-translate-y-1 hover:shadow-md text-slate-700 active:border-b-0 active:translate-y-[5px]";
+                      let btnStateClass = "bg-white border-slate-200 border-b-[6px] hover:border-blue-400 hover:bg-blue-50 hover:-translate-y-1 hover:shadow-md text-slate-700 active:border-b-0 active:translate-y-[6px]";
                       
                       if (isAnswerChecked) {
                         if (isCorrect) {
-                          btnStateClass = "bg-green-50 border-green-500 border-b-[5px] text-green-800 shadow-md";
+                          btnStateClass = "bg-green-50 border-green-500 border-b-[6px] text-green-800 shadow-md";
                         } else if (isSelected && !isCorrect) {
-                          btnStateClass = "bg-red-50 border-red-400 border-b-[5px] text-red-700 opacity-70";
+                          btnStateClass = "bg-red-50 border-red-400 border-b-[6px] text-red-700 opacity-70";
                         } else {
-                          btnStateClass = "bg-slate-50 border-slate-200 border-b-[5px] opacity-40";
+                          btnStateClass = "bg-slate-50 border-slate-200 border-b-[6px] opacity-40";
                         }
                       } else if (isSelected) {
-                        btnStateClass = "bg-blue-50 border-blue-500 border-b-[5px] text-blue-800 shadow-md scale-[1.02] transform ring-4 ring-blue-500/20";
+                        btnStateClass = "bg-blue-50 border-blue-500 border-b-[6px] text-blue-800 shadow-md scale-[1.02] transform ring-4 ring-blue-500/20";
                       }
 
                       return (
-                        <button
-                          key={option.id}
+                        <motion.button
+                          key={option.id + question.id}
+                          initial={{ opacity: 0, y: 20, scale: 0.9 }}
+                          animate={
+                            isAnswerChecked && isSelected && !isCorrect 
+                            ? { opacity: 1, y: 0, scale: 1, x: [-5, 5, -5, 5, 0], transition: { duration: 0.3 } }
+                            : { opacity: 1, y: 0, scale: 1 }
+                          }
+                          transition={{ duration: 0.2, delay: index * 0.08 }}
                           onClick={() => handleAnswerClick(option.id)}
                           disabled={isAnswerChecked}
-                          className={`relative p-3 rounded-xl text-base font-bold transition-all text-left flex items-center gap-3 border-2 ${btnStateClass}`}
+                          className={`relative p-3 sm:p-4 rounded-2xl text-base font-bold transition-all text-left flex items-center gap-3 border-2 ${btnStateClass}`}
                         >
                           <span className={`flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center font-black text-sm shadow-inner
                             ${isAnswerChecked && isCorrect ? 'bg-green-500 text-white' : 
@@ -511,7 +525,7 @@ export default function MathQuizApp() {
                               <XCircle className="w-5 h-5 text-white" />
                             </motion.div>
                           )}
-                        </button>
+                        </motion.button>
                       );
                     })}
                   </div>
@@ -526,21 +540,7 @@ export default function MathQuizApp() {
             {/* Right Column: Progress, Feedback & Actions */}
             <div className="w-full md:w-1/3 flex flex-col bg-white shrink-0">
               
-              {/* Progress Section */}
-              <div className="p-4 bg-slate-50/50 border-b-2 border-slate-100">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm font-bold text-slate-400 uppercase tracking-widest">Tiến độ</span>
-                  <span className="text-sm font-bold text-indigo-600 bg-indigo-100 px-2 py-0.5 rounded-lg border border-indigo-200">{Math.round(progress)}%</span>
-                </div>
-                <div className="w-full bg-slate-200 rounded-full h-3 overflow-hidden shadow-inner">
-                  <motion.div 
-                    initial={{ width: 0 }}
-                    animate={{ width: `${progress}%` }}
-                    transition={{ duration: 0.5, ease: "easeOut" }}
-                    className="h-full bg-gradient-to-r from-green-400 to-emerald-500 rounded-full"
-                  />
-                </div>
-              </div>
+              {/* Progress Section Removed from here */}
 
               {/* Feedback Section */}
               <div className="flex-1 p-5 flex flex-col justify-center min-h-[140px] bg-white relative">
@@ -573,7 +573,7 @@ export default function MathQuizApp() {
                   <Button 
                     onClick={checkAnswer} 
                     disabled={!selectedAnswer}
-                    className="w-full rounded-xl h-12 text-lg font-bold bg-blue-500 hover:bg-blue-600 border-b-4 border-blue-700 active:translate-y-1 active:border-b-0 shadow-sm"
+                    className="w-full rounded-2xl h-14 text-xl font-bold bg-blue-500 hover:bg-blue-600 border-b-[6px] border-blue-700 active:translate-y-[6px] active:border-b-0 shadow-sm"
                   >
                     Kiểm Tra
                   </Button>
@@ -582,10 +582,9 @@ export default function MathQuizApp() {
                 {isAnswerChecked && (
                   <Button 
                     onClick={nextQuestion} 
-                    className="w-full rounded-xl h-12 text-lg font-bold bg-green-500 hover:bg-green-600 text-white border-b-4 border-green-700 active:translate-y-1 active:border-b-0 shadow-md"
+                    className="w-full rounded-2xl h-14 text-xl font-bold bg-green-500 hover:bg-green-600 text-white border-b-[6px] border-green-700 active:translate-y-[6px] active:border-b-0 shadow-md"
                   >
-                    {currentIndex < totalQuestions - 1 ? 'Câu Tiếp Theo' : 'Hoàn Thành'} 
-                    <ArrowRight className="w-5 h-5 ml-2" strokeWidth={3} />
+                    {currentIndex < totalQuestions - 1 ? 'Tiếp Tục' : 'Hoàn Thành'} 
                   </Button>
                 )}
               </div>
