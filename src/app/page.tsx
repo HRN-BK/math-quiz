@@ -9,8 +9,9 @@ import { GeometryRenderer } from '@/components/GeometryRenderer';
 import { DragDropQuestion } from '@/components/DragDropQuestion';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CheckCircle2, XCircle, Trophy, RotateCcw, ArrowRight, Sparkles, Star, ClipboardList } from 'lucide-react';
+import { CheckCircle2, XCircle, Trophy, RotateCcw, ArrowRight, Sparkles, Star, ClipboardList, Flame } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import { playClickSound, playCorrectSound, playWrongSound } from '@/utils/sounds';
 
 interface AnswerRecord {
   questionId: string;
@@ -34,8 +35,13 @@ export default function MathQuizApp() {
   // Track answer history
   const [answersHistory, setAnswersHistory] = useState<AnswerRecord[]>([]);
 
+  const [streak, setStreak] = useState(0);
+  const [maxStreak, setMaxStreak] = useState(0);
+
   const question = currentQuestions[currentIndex];
   const progress = ((currentIndex) / totalQuestions) * 100;
+  const currentRecord = isAnswerChecked ? answersHistory[currentIndex] : null;
+  const isCurrentCorrect = currentRecord?.isCorrect ?? false;
 
   const triggerConfetti = () => {
     confetti({
@@ -66,10 +72,13 @@ export default function MathQuizApp() {
     setSelectedAnswer(null);
     setIsAnswerChecked(false);
     setAnswersHistory([]);
+    setStreak(0);
+    setMaxStreak(0);
   };
 
   const handleAnswerClick = (optionId: string) => {
     if (isAnswerChecked) return;
+    playClickSound();
     setSelectedAnswer(optionId);
   };
 
@@ -80,13 +89,21 @@ export default function MathQuizApp() {
     const isCorrect = selectedAnswer === question.correctAnswerId;
     
     if (isCorrect) {
+      playCorrectSound();
       setScore(s => s + 1);
+      setStreak(s => {
+        const newStreak = s + 1;
+        if (newStreak > maxStreak) setMaxStreak(newStreak);
+        return newStreak;
+      });
       confetti({ particleCount: 30, spread: 50, origin: { y: 0.8 } });
       toast.success("Chính xác! Giỏi quá!", {
         icon: <CheckCircle2 className="w-6 h-6 text-green-500" />,
         duration: 2000,
       });
     } else {
+      playWrongSound();
+      setStreak(0);
       toast.error("Sai mất rồi! Cố gắng câu sau nhé.", {
         icon: <XCircle className="w-6 h-6 text-red-500" />,
         duration: 3000,
@@ -103,12 +120,20 @@ export default function MathQuizApp() {
   const handleDragDropComplete = (isCorrect: boolean) => {
     setIsAnswerChecked(true);
     if (isCorrect) {
+      playCorrectSound();
       setScore(s => s + 1);
+      setStreak(s => {
+        const newStreak = s + 1;
+        if (newStreak > maxStreak) setMaxStreak(newStreak);
+        return newStreak;
+      });
       confetti({ particleCount: 30, spread: 50, origin: { y: 0.8 } });
       toast.success("Tuyệt vời! Bạn ghép đúng hết rồi!", {
         icon: <CheckCircle2 className="w-6 h-6 text-green-500" />
       });
     } else {
+      playWrongSound();
+      setStreak(0);
       toast.error("Chưa chính xác! Bạn kiểm tra lại nhé.", {
         icon: <XCircle className="w-6 h-6 text-red-500" />
       });
@@ -140,6 +165,8 @@ export default function MathQuizApp() {
     setSelectedAnswer(null);
     setIsAnswerChecked(false);
     setAnswersHistory([]);
+    setStreak(0);
+    setMaxStreak(0);
   };
 
   if (showResult) {
@@ -422,6 +449,21 @@ export default function MathQuizApp() {
           </motion.div>
         </div>
         <div className="flex items-center gap-2 text-amber-500 font-black text-xl shrink-0">
+          <AnimatePresence>
+            {streak >= 2 && (
+              <motion.div 
+                key="combo-badge"
+                initial={{ scale: 0, x: 20, opacity: 0 }}
+                animate={{ scale: [1, 1.1, 1], x: 0, opacity: 1 }}
+                exit={{ scale: 0, opacity: 0 }}
+                transition={{ duration: 0.4 }}
+                className="flex items-center gap-1.5 bg-gradient-to-r from-orange-500 to-red-500 text-white px-3 py-1 rounded-full shadow-lg mr-2"
+              >
+                <Flame className="w-5 h-5 animate-pulse" />
+                <span className="text-sm font-bold tracking-wide">Combo x{streak}</span>
+              </motion.div>
+            )}
+          </AnimatePresence>
           <svg className="w-8 h-8 drop-shadow-sm fill-amber-400 stroke-amber-600 stroke-[1.5]" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
           {score}
         </div>
@@ -538,31 +580,44 @@ export default function MathQuizApp() {
             </div>
 
             {/* Right Column: Progress, Feedback & Actions */}
-            <div className="w-full md:w-1/3 flex flex-col bg-white shrink-0">
+            <div className="w-full md:w-[40%] flex flex-col bg-white shrink-0 border-t-2 md:border-t-0 md:border-l-2 border-slate-100">
               
               {/* Progress Section Removed from here */}
 
               {/* Feedback Section */}
-              <div className="flex-1 p-5 flex flex-col justify-center min-h-[140px] bg-white relative">
-                <div className="absolute inset-0 bg-gradient-to-b from-transparent to-slate-50/50 pointer-events-none"></div>
-                {isAnswerChecked && question.explanation ? (
+              <div className="flex-1 p-5 flex flex-col justify-center items-center min-h-[140px] bg-white relative">
+                {isAnswerChecked ? (
                   <motion.div 
                     initial={{ opacity: 0, scale: 0.9, y: 10 }} 
                     animate={{ opacity: 1, scale: 1, y: 0 }} 
                     transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                    className="p-4 bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-300 rounded-2xl text-amber-900 shadow-md relative z-10"
+                    className="flex flex-col items-center relative z-10 w-full"
                   >
-                    <strong className="flex items-center gap-1.5 text-amber-600 mb-2 text-sm uppercase tracking-wider">
-                      <Sparkles className="w-5 h-5 animate-pulse" /> Lời giải:
-                    </strong>
-                    <p className="text-base font-bold leading-relaxed">{question.explanation}</p>
+                    {question.explanation && (
+                      <div className="p-4 sm:p-5 bg-amber-50 border-2 border-amber-300 rounded-[1.5rem] text-amber-900 shadow-md w-full mb-4 relative z-10">
+                        <div className="absolute -bottom-2.5 left-1/2 -translate-x-1/2 w-5 h-5 bg-amber-50 border-b-2 border-r-2 border-amber-300 rotate-45 rounded-sm"></div>
+                        <strong className="flex items-center gap-1.5 text-amber-600 mb-2 text-sm uppercase tracking-wider">
+                          <Sparkles className="w-5 h-5 animate-pulse" /> Lời giải:
+                        </strong>
+                        <p className="text-base font-bold leading-relaxed">{question.explanation}</p>
+                      </div>
+                    )}
+                    <motion.img 
+                      initial={{ scale: 0, y: 20 }}
+                      animate={{ scale: 1, y: 0 }}
+                      transition={{ type: "spring", bounce: 0.6 }}
+                      src={isCurrentCorrect ? '/mascot_happy.png' : '/mascot_sad.png'} 
+                      alt={isCurrentCorrect ? 'Happy Mascot' : 'Sad Mascot'}
+                      className="w-40 h-40 sm:w-56 sm:h-56 object-contain relative z-20 mix-blend-multiply"
+                    />
                   </motion.div>
                 ) : (
-                  <div className="flex flex-col items-center justify-center text-slate-300 opacity-60 space-y-3 relative z-10">
-                    <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center shadow-inner">
-                      <Star className="w-8 h-8 text-slate-400" />
+                  <div className="flex flex-col items-center justify-center text-slate-500 space-y-4 relative z-10 w-full">
+                    <div className="p-3 bg-white border-2 border-slate-200 rounded-2xl shadow-sm relative">
+                       <div className="absolute -bottom-2.5 left-1/2 -translate-x-1/2 w-5 h-5 bg-white border-b-2 border-r-2 border-slate-200 rotate-45 rounded-sm"></div>
+                       <span className="text-sm font-bold text-center px-2 tracking-wide">Chọn đáp án để xem Cú giải thích nhé!</span>
                     </div>
-                    <span className="text-sm font-bold text-center px-4 tracking-wide">Chọn đáp án để xem giải thích nhé!</span>
+                    <img src="/math_mascot.png" alt="Mascot waiting" className="w-32 h-32 sm:w-48 sm:h-48 object-contain mix-blend-multiply grayscale opacity-60" />
                   </div>
                 )}
               </div>
